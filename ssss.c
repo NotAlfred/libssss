@@ -171,7 +171,7 @@ void field_print(FILE* stream, const mpz_t x, int hexmode)
     size_t t;
     unsigned int i;
     int printable, warn = 0;
-    memset(buf, degree / 8 + 1, 0);
+    memset(buf, 0, degree / 8 + 1);
     mpz_export(buf, &t, 1, 1, 0, 0, x);
     for(i = 0; i < t; i++) {
       printable = (buf[i] >= 32) && (buf[i] < 127);
@@ -560,7 +560,8 @@ int main(int argc, char *argv[])
 #endif
 
   if (getuid() != geteuid())
-    seteuid(getuid());
+    if (seteuid(getuid()) != 0)
+	warning(strerror(errno));
 
   tcgetattr(0, &echo_orig);
   echo_off = echo_orig;
