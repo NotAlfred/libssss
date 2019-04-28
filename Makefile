@@ -1,17 +1,37 @@
-all: ssss-split ssss-combine ssss.1 ssss.1.html
+##
+#  sssslib  -  Copyright 2019 NotAlfred
+##
 
-ssss-split: ssss.c
-	$(CC) -W -Wall -O2 -o ssss-split ssss.c -lgmp
-	strip ssss-split
+NAME		=       libssss
 
-ssss-combine: ssss-split
-	ln -f ssss-split ssss-combine
+CC		=	gcc
 
-ssss.1: ssss.manpage.xml
-	xmltoman ssss.manpage.xml > ssss.1
+INC		=	include
 
-ssss.1.html: ssss.manpage.xml
-	xmlmantohtml ssss.manpage.xml > ssss.1.html
+CFLAGS		=	-W -Wall -Wextra -pedantic -O2 -std=c99 -fPIC
 
-clean:
-	rm -rf ssss-split ssss-combine ssss.1 ssss.1.html
+LDFLAGS		=	-lgmp -shared
+
+RM		=	rm -f
+
+SOURCES		=	src
+
+FILES		=	$(SOURCES)/ssss.c
+
+OBJS		=	$(FILES:.c=.o)
+
+all		:
+			@$(MAKE) --no-print-directory $(NAME)
+
+libssss		:	$(OBJS)
+			$(CC) $(CFLAGS) $(OBJS) -o $(NAME) $(LDFLAGS)
+
+clean		:
+			$(RM) $(OBJS) $(OBJC)
+
+fclean		:	clean
+			$(RM) $(NAME)
+
+re		:	fclean all
+
+.PHONY		:	all clean fclean re
