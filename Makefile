@@ -4,13 +4,13 @@
 
 NAME		=       libssss
 
-CC		=	gcc
+CC		=	gcc -g
 
-INC		=	include
+INC		=	includes
 
-CFLAGS		=	-W -Wall -Wextra -pedantic -O2 -std=c99 -fPIC
+CFLAGS		=	-W -Wall -Wextra -pedantic -O2 -std=c99 -I$(INC)#-fPIC
 
-LDFLAGS		=	-lgmp -shared
+LDFLAGS		=	-lgmp #-shared
 
 RM		=	rm -f
 
