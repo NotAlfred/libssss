@@ -19,7 +19,7 @@
 #define SSSS_INCONSISTENT_SHARE 7
 
 #define VERSION "0.0.1"
-#define RANDOM_SOURCE "/dev/urandom"
+
 #define MAXDEGREE 1024
 #define MAXTOKENLEN 128
 #define MAXLINELEN (MAXTOKENLEN + 1 + 10 + 1 + MAXDEGREE / 4 + 10)
@@ -40,15 +40,17 @@ extern int ssss_hex_mode;
 /* last error code */
 extern int ssss_error;
 
+/* random number generator */
+extern CSPRNG ssss_rng;
+
 enum encdec {
     ENCODE,
     DECODE
 };
 
-void ssss_initialize(int hex_mode);
+int ssss_initialize(int hex_mode);
 void ssss_release(void);
 
-/* return needs to be free'd */
 char *ssss_get_error_str();
 
 /* return needs to be free'd */

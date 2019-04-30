@@ -18,18 +18,7 @@
  *  02111-1307 USA
  */
 
-/* for open */
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-/* end */
-/* random */
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-/* end */
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -37,6 +26,7 @@
 #include <errno.h>
 #include <sys/mman.h>
 
+#include <csprng.h>
 #include <gmp.h>
 
 #include "ssss.h"
@@ -60,13 +50,14 @@ int ssss_hex_mode = 0;
 
 int ssss_error = 0;
 
+CSPRNG ssss_rng;
+
 unsigned int degree;
 mpz_t poly;
-int cprng;
 
 void warning(char *msg)
 {
-    fprintf(stderr, "%sWARNING: %s.\n", isatty(2) ? "\a" : "", msg);
+    fprintf(stderr, "WARNING: %s.\n", msg);
 }
 
 /* field arithmetic routines */
@@ -140,7 +131,7 @@ char *field_to_string(char *prefix, const mpz_t x, int hex_mode)
             warn = warn || !printable;
             buf[i] = printable ? buf[i] : '.';
         }
-        asprintf(&share, "%s%s", prefix, buf);
+        gmp_asprintf(&share, "%s%s", prefix, buf);
         if (warn)
             warning("binary data detected, use -x mode instead");
     }
@@ -209,34 +200,6 @@ void field_invert(mpz_t z, const mpz_t x)
     mpz_clear(v);
     mpz_clear(g);
     mpz_clear(h);
-}
-
-/* routines for the random number generator */
-//todo: change RNG to be cross platform
-void cprng_init(void)
-{
-    if ((cprng = open(RANDOM_SOURCE, O_RDONLY)) < 0)
-        exit(printf("open error"));
-}
-
-void cprng_deinit(void)
-{
-    if (close(cprng) < 0)
-        exit(printf("close error"));
-}
-
-void cprng_read(mpz_t x)
-{
-    char buf[MAXDEGREE / 8];
-    unsigned int count;
-    int i;
-    for (count = 0; count < degree / 8; count += i) {
-        if ((i = read(cprng, buf + count, degree / 8 - count)) < 0) {
-            close(cprng);
-            exit(-1);
-        }
-    }
-    mpz_import(x, degree / 8, 1, 1, 0, 0, buf);
 }
 
 /* a 64 bit pseudo random permutation (based on the XTEA cipher) */
@@ -355,6 +318,27 @@ int restore_secret(int n, void *A, mpz_t b[])
     return 0;
 }
 
+/* routines for the random number generator */
+void rng_generate(mpz_t x)
+{
+    char buf[MAXDEGREE / 8];
+    csprng_get(ssss_rng, buf, degree / 8); //todo: error handling
+    mpz_import(x, degree / 8, 1, 1, 0, 0, buf);
+}
+
+int rng_init(void)
+{
+    ssss_rng = csprng_create(ssss_rng);
+    if (!ssss_rng)
+        return -1;
+    return 0;
+}
+
+void rng_release(void)
+{
+    ssss_rng = csprng_destroy(ssss_rng);
+}
+
 void try_lock_mem(void)
 {
 #if !NOMLOCK
@@ -437,12 +421,10 @@ char **ssss_split(char *secret, int threshold, int share_number, int security_le
     else
         warning("security level too small for the diffusion layer");
 
-    cprng_init();
     for (int i = 1; i < threshold; ++i) {
         mpz_init(coeff[i]);
-        cprng_read(coeff[i]);
+        rng_generate(coeff[i]);
     }
-    cprng_deinit();
 
     shares = calloc(share_number, sizeof(char *));
 
@@ -539,21 +521,26 @@ char *ssss_combine(char **shares, int threshold)
     return share;
 }
 
-void ssss_initialize(int hex_mode)
+int ssss_initialize(int hex_mode)
 {
     ssss_hex_mode = hex_mode;
     ssss_error = 0;
+    if (rng_init() == -1)
+        return -1;
     try_lock_mem();
+    return 0;
 }
 
 void ssss_release(void)
 {
+    rng_release();
     try_unlock_mem();
 }
 
 int main(int argc, char *argv[])
 {
-    ssss_initialize(SSSS_HEX_MODE_OFF);
+    if (ssss_initialize(SSSS_HEX_MODE_OFF) == -1)
+        return -1;
     char **shares = ssss_split("totototototototafzefzv", 200, 1000, SSSS_DYNAMIC_SECURITY); // [8..1024] multiple of 8
     for (int i = 0; i < 1000; ++i) {
         printf("%s\n", shares[i]);

@@ -16,7 +16,8 @@ RM		=	rm -f
 
 SOURCES		=	src
 
-FILES		=	$(SOURCES)/ssss.c
+FILES		=	$(SOURCES)/ssss.c \
+			$(SOURCES)/rng/csprng.c
 
 OBJS		=	$(FILES:.c=.o)
 
