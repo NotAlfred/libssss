@@ -283,16 +283,16 @@ void encode_mpz(mpz_t x, enum encdec mode)
 {
     uint8_t v[(MAXDEGREE + 8) / 16 * 2];
     size_t t;
-    int i;
+
     memset(v, 0, (degree + 8) / 16 * 2);
     mpz_export(v, &t, -1, 2, 1, 0, x);
     if (degree % 16 == 8)
         v[degree / 8 - 1] = v[degree / 8];
     if (mode == ENCODE)             /* 40 rounds are more than enough!*/
-        for (i = 0; i < 40 * ((int) degree / 8); i += 2)
+        for (int i = 0; i < 40 * ((int) degree / 8); i += 2)
             encode_slice(v, i, degree / 8, encipher_block);
     else
-        for (i = 40 * (degree / 8) - 2; i >= 0; i -= 2)
+        for (int i = 40 * (degree / 8) - 2; i >= 0; i -= 2)
             encode_slice(v, i, degree / 8, decipher_block);
     if (degree % 16 == 8) {
         v[degree / 8] = v[degree / 8 - 1];
@@ -538,9 +538,11 @@ char *ssss_combine(char **shares, int threshold)
     field_deinit();
     return share;
 }
+
 void ssss_initialize(int hex_mode)
 {
     ssss_hex_mode = hex_mode;
+    ssss_error = 0;
     try_lock_mem();
 }
 

@@ -8,7 +8,7 @@ CC		=	gcc -g
 
 INC		=	includes
 
-CFLAGS		=	-W -Wall -Wextra -pedantic -O2 -std=c99 -I$(INC)#-fPIC
+CFLAGS		=	-W -Wall -Wextra -pedantic -O2 -std=c99 -I$(INC) #-fPIC
 
 LDFLAGS		=	-lgmp #-shared
 
