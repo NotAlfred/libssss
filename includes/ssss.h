@@ -5,6 +5,8 @@
 #ifndef SSSS_SSSS_H
 #define SSSS_SSSS_H
 
+#include <csprng.h>
+
 #define SSSS_DYNAMIC_SECURITY 0
 
 #define SSSS_HEX_MODE_OFF 0

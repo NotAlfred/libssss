@@ -26,7 +26,6 @@
 #include <errno.h>
 #include <sys/mman.h>
 
-#include <csprng.h>
 #include <gmp.h>
 
 #include "ssss.h"
@@ -535,18 +534,4 @@ void ssss_release(void)
 {
     rng_release();
     try_unlock_mem();
-}
-
-int main(int argc, char *argv[])
-{
-    if (ssss_initialize(SSSS_HEX_MODE_OFF) == -1)
-        return -1;
-    char **shares = ssss_split("totototototototafzefzv", 200, 1000, SSSS_DYNAMIC_SECURITY); // [8..1024] multiple of 8
-    for (int i = 0; i < 1000; ++i) {
-        printf("%s\n", shares[i]);
-    }
-    char *share = ssss_combine(shares, 200);
-    printf("%s\n", share);
-    ssss_release();
-    return 0;
 }
